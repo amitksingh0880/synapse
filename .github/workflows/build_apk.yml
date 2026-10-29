@@ -32,6 +32,12 @@ jobs:
       - name: Verify Flutter Installation
         run: flutter doctor -v
 
+      - name: Setup Gradle 8.5 Wrapper
+        run: |
+          cd android
+          gradle wrapper --gradle-version 8.5 --distribution-type bin
+          chmod +x gradlew
+
       - name: Install Dependencies
         run: flutter pub get
 
