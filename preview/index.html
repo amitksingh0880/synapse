@@ -1,0 +1,1506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Synapse — Adaptive Bento & Lock Screen JARVIS</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #050507;
+      --surface: rgba(18, 18, 24, 0.76);
+      --surface-elevated: rgba(28, 28, 38, 0.9);
+      --border: rgba(255, 255, 255, 0.08);
+      --border-highlight: rgba(255, 255, 255, 0.22);
+      --emerald: #10B981;
+      --emerald-glow: rgba(16, 185, 129, 0.35);
+      --cyan: #06B6D4;
+      --cyan-glow: rgba(6, 182, 212, 0.35);
+      --amber: #F59E0B;
+      --amber-glow: rgba(245, 158, 11, 0.35);
+      --coral: #EF4444;
+      --coral-glow: rgba(239, 68, 68, 0.35);
+      --violet: #8B5CF6;
+      --violet-glow: rgba(139, 92, 246, 0.35);
+      --text: #F8F9FA;
+      --text-muted: #6C6E7E;
+      --text-secondary: #9DA0B4;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Outfit', -apple-system, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg);
+      background-image: 
+        radial-gradient(at 15% 15%, rgba(16, 185, 129, 0.09) 0px, transparent 40%),
+        radial-gradient(at 85% 85%, rgba(6, 182, 212, 0.09) 0px, transparent 45%),
+        radial-gradient(at 50% 50%, rgba(139, 92, 246, 0.05) 0px, transparent 50%);
+      color: var(--text);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+      padding: 24px 12px;
+      overflow-x: hidden;
+    }
+
+    /* Mode Switcher Outside Device */
+    .view-mode-bar {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      background: rgba(18, 18, 24, 0.85);
+      border: 1px solid var(--border);
+      padding: 6px;
+      border-radius: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+    }
+
+    .mode-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 8px 18px;
+      border-radius: 20px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.25s ease;
+    }
+
+    .mode-btn.active {
+      background: #fff;
+      color: #000;
+      box-shadow: 0 2px 10px rgba(255, 255, 255, 0.2);
+    }
+
+    /* Device Showcase */
+    .device {
+      width: 412px;
+      height: 890px;
+      background: rgba(10, 10, 14, 0.94);
+      backdrop-filter: blur(60px);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 48px;
+      box-shadow: 
+        0 40px 100px -20px rgba(0, 0, 0, 0.9),
+        0 0 0 1px rgba(255, 255, 255, 0.05),
+        inset 0 1px 1px rgba(255, 255, 255, 0.2);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    /* Top Bar */
+    .top-island {
+      height: 48px;
+      padding: 0 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      z-index: 20;
+    }
+
+    .island-pill {
+      background: #000;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 20px;
+      padding: 4px 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: var(--emerald);
+      font-size: 10px;
+      box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
+    }
+
+    /* Header */
+    .header {
+      padding: 8px 24px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .meta-serial {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      letter-spacing: 1.5px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+
+    .brand-title {
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -1.2px;
+      line-height: 1;
+      margin-top: 4px;
+      background: linear-gradient(180deg, #FFFFFF 30%, #8E92A8 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .report-badge {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.3s;
+    }
+
+    .report-badge:hover {
+      border-color: var(--emerald);
+      box-shadow: 0 0 20px var(--emerald-glow);
+      transform: scale(1.06);
+    }
+
+    .compliance-gauge {
+      position: absolute;
+      inset: -2px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      border-top-color: var(--emerald);
+      border-right-color: var(--emerald);
+      transform: rotate(-45deg);
+    }
+
+    /* UNIFIED BENTO VIEWPORT: ZERO INTERNAL CARD SCROLLING */
+    .bento-container {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 20px 110px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .bento-container::-webkit-scrollbar {
+      display: none;
+    }
+
+    .sector-ribbon {
+      display: flex;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 4px;
+      gap: 4px;
+    }
+
+    .sector-tab {
+      flex: 1;
+      padding: 8px 0;
+      text-align: center;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 600;
+      color: var(--text-muted);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s;
+      letter-spacing: 0.5px;
+    }
+
+    .sector-tab.active {
+      background: var(--surface-elevated);
+      color: var(--text);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4), inset 0 1px 1px rgba(255, 255, 255, 0.15);
+    }
+
+    /* Bento Cards: Sized to fit naturally, ZERO INNER SCROLLBARS */
+    .card {
+      background: var(--surface);
+      backdrop-filter: blur(30px);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      padding: 18px;
+      position: relative;
+      overflow: visible; /* NO INNER SCROLLBARS */
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 20px;
+      right: 20px;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.22), transparent);
+    }
+
+    .hero-card {
+      background: linear-gradient(175deg, rgba(24, 24, 32, 0.8) 0%, rgba(14, 14, 18, 0.95) 100%);
+    }
+
+    .card-header-flex {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .card-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      font-weight: 700;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .card-tag-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: var(--emerald);
+      box-shadow: 0 0 8px var(--emerald);
+    }
+
+    .pills-stream {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .pill-item {
+      display: flex;
+      align-items: center;
+      padding: 12px 14px;
+      background: rgba(255, 255, 255, 0.025);
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      border-radius: 18px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .pill-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .pill-item.done {
+      opacity: 0.5;
+    }
+
+    .pill-check {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      border: 1.5px solid var(--border-highlight);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 12px;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      flex-shrink: 0;
+    }
+
+    .pill-check.checked {
+      background: var(--emerald);
+      border-color: var(--emerald);
+      color: #000;
+      transform: scale(1.08);
+      box-shadow: 0 0 14px var(--emerald-glow);
+    }
+
+    .pill-details {
+      flex: 1;
+    }
+
+    .pill-name {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text);
+      letter-spacing: -0.2px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .pill-item.done .pill-name {
+      text-decoration: line-through;
+    }
+
+    .pill-meta {
+      font-size: 11px;
+      color: var(--text-secondary);
+      margin-top: 2px;
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .refill-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: var(--coral);
+      background: rgba(239, 68, 68, 0.12);
+      padding: 2px 6px;
+      border-radius: 6px;
+      font-weight: 700;
+      animation: pulseAlert 2s infinite ease-in-out;
+    }
+
+    @keyframes pulseAlert {
+      0%, 100% { opacity: 0.8; }
+      50% { opacity: 1; filter: drop-shadow(0 0 6px var(--coral-glow)); }
+    }
+
+    .pill-time {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--text-muted);
+      background: rgba(0, 0, 0, 0.3);
+      padding: 4px 8px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+    }
+
+    /* Bento 2x Grid */
+    .bento-grid-2x {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: 14px;
+    }
+
+    .wave-card {
+      background: linear-gradient(180deg, rgba(6, 182, 212, 0.08) 0%, rgba(14, 14, 20, 0.8) 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .water-canvas-wrap {
+      width: 100%;
+      height: 70px;
+      border-radius: 14px;
+      position: relative;
+      overflow: hidden;
+      background: rgba(0, 0, 0, 0.4);
+      margin: 10px 0;
+      border: 1px solid rgba(6, 182, 212, 0.2);
+    }
+
+    #waterCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .water-stats {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+    }
+
+    .water-num {
+      font-size: 22px;
+      font-weight: 700;
+      letter-spacing: -0.6px;
+      color: var(--cyan);
+    }
+
+    .water-goal {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .water-add-pill {
+      background: var(--cyan);
+      color: #000;
+      border: none;
+      border-radius: 20px;
+      padding: 6px 14px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      box-shadow: 0 4px 15px var(--cyan-glow);
+    }
+
+    .movement-card {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .movement-arc-wrap {
+      position: relative;
+      width: 72px;
+      height: 72px;
+      margin: 6px auto;
+    }
+
+    .movement-arc-text {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 16px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .movement-arc-label {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 8px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .stretch-nudge-btn {
+      width: 100%;
+      background: rgba(99, 102, 241, 0.15);
+      border: 1px solid rgba(99, 102, 241, 0.4);
+      color: #A5B4FC;
+      border-radius: 12px;
+      padding: 8px 0;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .vault-card {
+      background: linear-gradient(180deg, rgba(139, 92, 246, 0.06) 0%, rgba(14, 14, 20, 0.8) 100%);
+    }
+
+    .vault-item {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .vault-item:last-child {
+      border-bottom: none;
+      padding-bottom: 0;
+    }
+
+    .vault-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: rgba(139, 92, 246, 0.15);
+      border: 1px solid rgba(139, 92, 246, 0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      flex-shrink: 0;
+    }
+
+    .vault-content {
+      font-size: 12.5px;
+      color: #E2E8F0;
+      line-height: 1.4;
+    }
+
+    .vault-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 9px;
+      color: var(--violet);
+      letter-spacing: 0.5px;
+    }
+
+    /* JARVIS DOCK */
+    .jarvis-dock {
+      position: absolute;
+      bottom: 24px;
+      left: 20px;
+      right: 20px;
+      height: 64px;
+      background: rgba(16, 16, 22, 0.92);
+      backdrop-filter: blur(28px);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 36px;
+      padding: 0 16px 0 20px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+      z-index: 50;
+      cursor: pointer;
+    }
+
+    .jarvis-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .soundwave-box {
+      display: flex;
+      align-items: center;
+      gap: 3px;
+      height: 20px;
+    }
+
+    .sound-bar {
+      width: 2.5px;
+      height: 6px;
+      background: var(--cyan);
+      border-radius: 4px;
+      animation: soundDance 1.2s infinite ease-in-out;
+    }
+
+    .sound-bar:nth-child(2) { animation-delay: 0.2s; height: 14px; background: #6366F1; }
+    .sound-bar:nth-child(3) { animation-delay: 0.4s; height: 18px; background: #8B5CF6; }
+    .sound-bar:nth-child(4) { animation-delay: 0.1s; height: 10px; background: var(--cyan); }
+    .sound-bar:nth-child(5) { animation-delay: 0.3s; height: 16px; background: var(--emerald); }
+
+    @keyframes soundDance {
+      0%, 100% { transform: scaleY(0.4); }
+      50% { transform: scaleY(1.3); }
+    }
+
+    .jarvis-orb-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #06B6D4 0%, #6366F1 50%, #8B5CF6 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 0 24px rgba(6, 182, 212, 0.5);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+    }
+
+    /* =========================================================================
+       AUTHENTIC LOCK SCREEN SIMULATOR VIEW (Zero-Unlock Experience)
+       ========================================================================= */
+    .lock-screen-layer {
+      position: absolute;
+      inset: 0;
+      background: 
+        radial-gradient(at 20% 20%, rgba(99, 102, 241, 0.18) 0px, transparent 50%),
+        radial-gradient(at 80% 80%, rgba(16, 185, 129, 0.15) 0px, transparent 50%),
+        #050508;
+      display: none;
+      flex-direction: column;
+      padding: 60px 24px 40px;
+      z-index: 80;
+    }
+
+    .lock-screen-layer.active {
+      display: flex;
+    }
+
+    .lock-clock {
+      text-align: center;
+      margin-top: 20px;
+    }
+
+    .lock-date {
+      font-size: 16px;
+      font-weight: 500;
+      color: rgba(255, 255, 255, 0.85);
+      letter-spacing: -0.2px;
+    }
+
+    .lock-time {
+      font-size: 80px;
+      font-weight: 700;
+      letter-spacing: -3px;
+      line-height: 1;
+      margin-top: 4px;
+      color: #fff;
+    }
+
+    /* Live Activity Card on Lock Screen */
+    .lock-live-activity {
+      margin-top: 48px;
+      background: rgba(18, 18, 24, 0.85);
+      backdrop-filter: blur(40px);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 28px;
+      padding: 18px 20px;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8);
+    }
+
+    .live-activity-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .live-app-badge {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--emerald);
+      font-weight: 700;
+      letter-spacing: 0.8px;
+    }
+
+    .lock-actions-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 14px;
+    }
+
+    .lock-action-btn {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: #fff;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 10px 0;
+      border-radius: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .lock-action-btn:hover {
+      background: rgba(255, 255, 255, 0.18);
+    }
+
+    /* Lock Screen Spoken Jarvis Response */
+    .lock-siri-box {
+      margin-top: 24px;
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      border-radius: 20px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+    }
+
+    .lock-siri-box:hover {
+      border-color: var(--cyan);
+      box-shadow: 0 0 20px var(--cyan-glow);
+    }
+
+    /* Floating Ambient Lock Screen Wake HUD */
+    .lock-voice-hud {
+      margin-top: 18px;
+      background: rgba(14, 18, 28, 0.95);
+      backdrop-filter: blur(40px);
+      border: 1.5px solid var(--cyan);
+      border-radius: 24px;
+      padding: 16px 18px;
+      box-shadow: 0 20px 60px rgba(6, 182, 212, 0.35);
+      display: none;
+      flex-direction: column;
+      gap: 10px;
+      animation: hudSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .lock-voice-hud.active {
+      display: flex;
+    }
+
+    @keyframes hudSlideUp {
+      from { opacity: 0; transform: translateY(16px) scale(0.96); }
+      to { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    .hud-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .hud-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 10px;
+      color: var(--cyan);
+      font-weight: 700;
+      letter-spacing: 1px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .hud-query {
+      font-size: 13.5px;
+      font-weight: 600;
+      color: #FFFFFF;
+      line-height: 1.4;
+    }
+
+    .hud-response {
+      font-size: 12px;
+      color: #A5F3FC;
+      line-height: 1.5;
+      background: rgba(6, 182, 212, 0.12);
+      border-radius: 12px;
+      padding: 10px 14px;
+      border: 1px solid rgba(6, 182, 212, 0.25);
+    }
+
+    .hud-chips-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 12px;
+    }
+
+    .hud-chip {
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      color: var(--text-secondary);
+      font-size: 11px;
+      font-weight: 500;
+      padding: 6px 12px;
+      border-radius: 16px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .hud-chip:hover {
+      background: rgba(6, 182, 212, 0.2);
+      border-color: var(--cyan);
+      color: #fff;
+    }
+
+    /* MODAL OVERLAYS */
+    .modal-overlay {
+      position: absolute;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.88);
+      backdrop-filter: blur(20px);
+      z-index: 100;
+      display: none;
+      flex-direction: column;
+      justify-content: flex-end;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .modal-overlay.open {
+      display: flex;
+      opacity: 1;
+    }
+
+    .modal-sheet {
+      background: #111116;
+      border-top: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 36px 36px 0 0;
+      padding: 26px 24px 36px;
+      max-height: 85%;
+      overflow-y: auto;
+      transform: translateY(100%);
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .modal-overlay.open .modal-sheet {
+      transform: translateY(0);
+    }
+
+    .input-ambient {
+      width: 100%;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-highlight);
+      border-radius: 16px;
+      padding: 14px 18px;
+      color: #fff;
+      font-size: 15px;
+      margin-top: 16px;
+      outline: none;
+    }
+
+    .input-ambient:focus {
+      border-color: var(--cyan);
+      box-shadow: 0 0 16px var(--cyan-glow);
+    }
+
+    .action-chip {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- VIEW TOGGLE (Dashboard Mode vs Lock Screen Simulator vs Say Hey Buddy) -->
+  <div class="view-mode-bar">
+    <button class="mode-btn active" id="btnDashboard" onclick="setScreenMode('dashboard')">📱 Adaptive Bento Dashboard</button>
+    <button class="mode-btn" id="btnLock" onclick="setScreenMode('lock')">🔒 Lock Screen Live Activity</button>
+    <button class="mode-btn" id="btnHeyBuddy" style="background: linear-gradient(135deg, rgba(6,182,212,0.18), rgba(16,185,129,0.18)); border: 1px solid rgba(6,182,212,0.45); color:#38BDF8;" onclick="triggerHeyBuddyLockWake('Did I take my morning pills today?')">🎙️ Say "Hey Buddy"</button>
+  </div>
+
+  <div class="device">
+    
+    <!-- ==================== 1. DASHBOARD BENTO VIEW ==================== -->
+    <div id="dashboardView" style="display:flex; flex-direction:column; height:100%;">
+      <!-- Dynamic Island Top Bar -->
+      <div class="top-island">
+        <span>09:41</span>
+        <div class="island-pill">
+          <span style="font-size: 8px;">●</span>
+          <span>SYNAPSE ACTIVE</span>
+        </div>
+        <span>100%</span>
+      </div>
+
+      <!-- Header -->
+      <div class="header">
+        <div>
+          <div class="meta-serial" id="currentDate">WEDNESDAY // OCT 28</div>
+          <div class="brand-title">Synapse</div>
+        </div>
+        <div class="report-badge" onclick="openReport()" title="Clinical 30-Day Adherence Report">
+          <div class="compliance-gauge"></div>
+          <span style="font-family:'JetBrains Mono', monospace; font-size: 11px; font-weight:700;" id="scoreDisplay">85%</span>
+        </div>
+      </div>
+
+      <!-- Bento Viewport (Smooth Outer Scroll, Zero Inner Card Scroll) -->
+      <div class="bento-container">
+        
+        <!-- Sector Selector Ribbon -->
+        <div class="sector-ribbon">
+          <div class="sector-tab active" onclick="switchSector('morning')">MORNING</div>
+          <div class="sector-tab" onclick="switchSector('afternoon')">MIDDAY</div>
+          <div class="sector-tab" onclick="switchSector('evening')">EVENING</div>
+        </div>
+
+        <!-- HERO BENTO TILE: Routine Pillbox -->
+        <div class="card hero-card">
+          <div class="card-header-flex">
+            <div class="card-tag">
+              <span class="card-tag-dot"></span>
+              <span id="sectorHeaderTag" style="color:var(--emerald);">MORNING REGIMEN</span>
+            </div>
+            <span style="font-family:'JetBrains Mono', monospace; font-size:10px; color:var(--text-muted);" id="sectorProgress">2/3 DONE</span>
+          </div>
+
+          <div class="pills-stream" id="pillsContainer">
+            <!-- Dynamically injected -->
+          </div>
+        </div>
+
+        <!-- BENTO 2X GRID -->
+        <div class="bento-grid-2x">
+          <!-- Tile 1: Fluid Liquid Wave -->
+          <div class="card wave-card">
+            <div class="card-header-flex" style="margin-bottom: 4px;">
+              <span class="card-tag" style="color:var(--cyan);">💧 HYDRATION</span>
+              <button class="water-add-pill" onclick="addWater(250)">+250ml</button>
+            </div>
+
+            <div class="water-canvas-wrap">
+              <canvas id="waterCanvas"></canvas>
+            </div>
+
+            <div class="water-stats">
+              <div>
+                <div class="water-num" id="waterNum">1,750</div>
+                <div class="water-goal">/ 2,500 mL GOAL</div>
+              </div>
+              <div style="font-family:'JetBrains Mono', monospace; font-size:12px; color:var(--cyan); font-weight:700;" id="waterPct">
+                70%
+              </div>
+            </div>
+          </div>
+
+          <!-- Tile 2: Inactivity & Movement Arc -->
+          <div class="card movement-card">
+            <div class="card-tag" style="color:#A5B4FC;">🏃 MOVEMENT</div>
+
+            <div class="movement-arc-wrap">
+              <svg width="72" height="72" viewBox="0 0 72 72">
+                <circle cx="36" cy="36" r="30" stroke="rgba(255,255,255,0.06)" stroke-width="5" fill="none"/>
+                <circle cx="36" cy="36" r="30" stroke="#6366F1" stroke-width="5" stroke-dasharray="188" stroke-dashoffset="60" stroke-linecap="round" fill="none"/>
+              </svg>
+              <div class="movement-arc-text">
+                <span id="stretchCount">6</span>
+                <span class="movement-arc-label">STRETCH</span>
+              </div>
+            </div>
+
+            <button class="stretch-nudge-btn" onclick="logStretch()">Log 2m Stretch</button>
+          </div>
+        </div>
+
+        <!-- BENTO TILE: Second Brain Vault -->
+        <div class="card vault-card">
+          <div class="card-header-flex">
+            <span class="card-tag" style="color:var(--violet);">🧠 SECOND BRAIN VAULT</span>
+            <span style="font-family:'JetBrains Mono', monospace; font-size:10px; color:var(--violet); cursor:pointer;" onclick="openJarvis()">QUERY ALL</span>
+          </div>
+
+          <div class="vault-item">
+            <div class="vault-icon">📍</div>
+            <div class="vault-content">
+              <div class="vault-tag">LOCATION ANCHOR</div>
+              <div>Basement Level 2, Pillar B14 (adjacent to West Elevator)</div>
+            </div>
+          </div>
+
+          <div class="vault-item">
+            <div class="vault-icon">🔑</div>
+            <div class="vault-content">
+              <div class="vault-tag">CREDENTIAL ENCRYPTED</div>
+              <div>Office Storage Lock #48 • Passcode: 8492</div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- FLOATING JARVIS SOUNDWAVE DOCK -->
+      <div class="jarvis-dock" onclick="openJarvis()">
+        <div class="jarvis-label">
+          <div class="soundwave-box">
+            <div class="sound-bar"></div>
+            <div class="sound-bar"></div>
+            <div class="sound-bar"></div>
+            <div class="sound-bar"></div>
+            <div class="sound-bar"></div>
+          </div>
+          <span>Ask Jarvis or speak a command...</span>
+        </div>
+
+        <div class="jarvis-orb-btn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#FFFFFF" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+            <line x1="12" x2="12" y1="19" y2="22"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+
+    <!-- ==================== 2. LOCK SCREEN LIVE ACTIVITY VIEW ==================== -->
+    <div class="lock-screen-layer" id="lockScreenLayer">
+      <div class="lock-clock">
+        <div class="lock-date">Wednesday, October 28</div>
+        <div class="lock-time">09:41</div>
+      </div>
+
+      <!-- Live Activity Card on Lock Screen -->
+      <div class="lock-live-activity">
+        <div class="live-activity-header">
+          <div class="live-app-badge">
+            <span>●</span>
+            <span>SYNAPSE • LIVE ACTIVITY</span>
+          </div>
+          <span style="font-family:'JetBrains Mono'; font-size:10px; color:var(--text-muted);">ACTIVE NOW</span>
+        </div>
+
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div>
+            <div style="font-size:16px; font-weight:700; color:#fff;" id="lockNextMedTitle">Metformin (500mg)</div>
+            <div style="font-size:12px; color:var(--text-secondary); margin-top:2px;">Scheduled 08:30 AM • With Food</div>
+          </div>
+          <div style="text-align:right;">
+            <div style="font-family:'JetBrains Mono'; font-size:14px; font-weight:700; color:var(--cyan);" id="lockWaterDisplay">1,750 mL</div>
+            <div style="font-size:9px; color:var(--text-muted); font-family:'JetBrains Mono';">70% HYDRATION</div>
+          </div>
+        </div>
+
+        <!-- 1-Tap Lock Screen Actions without Unlocking -->
+        <div class="lock-actions-row">
+          <button class="lock-action-btn" onclick="toggleLockMed()">
+            <span id="lockCheckIcon">✓</span>
+            <span id="lockCheckText">Mark Taken</span>
+          </button>
+          <button class="lock-action-btn" onclick="addWater(250)">
+            <span>💧</span>
+            <span>+250ml Water</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Lock Screen Voice Query Trigger (AirPods / Siri / Assistant) -->
+      <div class="lock-siri-box" onclick="triggerHeyBuddyLockWake('Did I take my morning pills today?')">
+        <div class="soundwave-box">
+          <div class="sound-bar"></div>
+          <div class="sound-bar"></div>
+          <div class="sound-bar"></div>
+        </div>
+        <div style="flex:1;">
+          <div style="font-size:12px; font-weight:600; color:#fff;">Ambient "Hey Buddy" Voice</div>
+          <div style="font-size:11px; color:var(--text-muted);">Tap to test lock screen speech & responses</div>
+        </div>
+        <span style="color:var(--cyan); font-size:14px;">🎙️</span>
+      </div>
+
+      <!-- Lock Screen Voice HUD Overlay -->
+      <div class="lock-voice-hud" id="lockVoiceHud">
+        <div class="hud-header">
+          <div class="hud-tag">
+            <span style="font-size: 8px;">●</span>
+            <span>AMBIENT "HEY BUDDY" WAKE</span>
+          </div>
+          <span style="font-size: 11px; color: var(--text-muted); cursor: pointer;" onclick="dismissHud()">✕</span>
+        </div>
+        <div class="hud-query" id="hudQuery">"Hey Buddy, did I take my morning pills?"</div>
+        <div class="hud-response" id="hudResponse">"Yes, Metformin & Vitamin D3 were logged this morning at 08:30 AM."</div>
+      </div>
+
+      <!-- Quick Ambient Prompts for Testing -->
+      <div class="hud-chips-row">
+        <div class="hud-chip" onclick="triggerHeyBuddyLockWake('Did I take my morning pills today?')">🎙️ Did I take pills?</div>
+        <div class="hud-chip" onclick="triggerHeyBuddyLockWake('Where did I park my car?')">🎙️ Where's my car?</div>
+        <div class="hud-chip" onclick="triggerHeyBuddyLockWake('Drank 250ml water')">💧 +250ml Water</div>
+        <div class="hud-chip" onclick="triggerMicListening()" id="realMicChip">🎤 Test Mic Input</div>
+      </div>
+
+      <div style="margin-top:auto; text-align:center; font-size:11px; color:var(--text-muted); font-family:'JetBrains Mono';">
+        SWIPE UP TO UNLOCK
+      </div>
+    </div>
+
+
+    <!-- JARVIS VOICE COMMAND MODAL -->
+    <div class="modal-overlay" id="jarvisModal" onclick="closeModal(event, 'jarvisModal')">
+      <div class="modal-sheet" onclick="event.stopPropagation()">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <div class="soundwave-box">
+              <div class="sound-bar"></div>
+              <div class="sound-bar"></div>
+              <div class="sound-bar"></div>
+            </div>
+            <h3 style="font-size:16px; font-weight:700; color:#fff;">Jarvis Ambient Engine</h3>
+          </div>
+          <span style="color:var(--text-muted); cursor:pointer; font-size:20px;" onclick="closeModalDirect('jarvisModal')">✕</span>
+        </div>
+
+        <div style="display:flex; flex-wrap:wrap; gap:6px; margin-top:14px;">
+          <span class="action-chip" onclick="quickFill('Where did I park my car?')">Where's my car?</span>
+          <span class="action-chip" onclick="quickFill('Did I take my morning pills today?')">Did I take my pills?</span>
+          <span class="action-chip" onclick="quickFill('Drank 500ml water')">+500ml Water</span>
+          <span class="action-chip" onclick="quickFill('Take 2 Panadol at 8am with food')">Add Panadol 8am</span>
+        </div>
+
+        <input type="text" id="jarvisInput" class="input-ambient" placeholder="Say or type command..." onkeydown="handleJarvisKey(event)">
+
+        <div id="jarvisFeedback" style="display:none; margin-top:16px; padding:14px; border-radius:14px; background:rgba(6,182,212,0.12); border:1px solid rgba(6,182,212,0.3); font-size:13px; color:#A5F3FC; line-height:1.4;">
+        </div>
+      </div>
+    </div>
+
+    <!-- CLINICAL DOCTOR REPORT MODAL -->
+    <div class="modal-overlay" id="reportModal" onclick="closeModal(event, 'reportModal')">
+      <div class="modal-sheet" onclick="event.stopPropagation()">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div style="display:flex; align-items:center; gap:8px;">
+            <span style="font-size:18px;">📋</span>
+            <h3 style="font-size:16px; font-weight:700; color:var(--emerald);">Clinical Adherence Report</h3>
+          </div>
+          <span style="color:var(--text-muted); cursor:pointer; font-size:20px;" onclick="closeModalDirect('reportModal')">✕</span>
+        </div>
+
+        <div style="display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-top:16px;">
+          <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:14px; padding:12px; text-align:center;">
+            <div style="font-size:20px; font-weight:700; color:var(--emerald);">94%</div>
+            <div style="font-size:10px; color:var(--text-muted); font-family:'JetBrains Mono';">30D SCORE</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:14px; padding:12px; text-align:center;">
+            <div style="font-size:20px; font-weight:700; color:var(--cyan);">12d</div>
+            <div style="font-size:10px; color:var(--text-muted); font-family:'JetBrains Mono';">STREAK</div>
+          </div>
+          <div style="background:rgba(255,255,255,0.03); border:1px solid var(--border); border-radius:14px; padding:12px; text-align:center;">
+            <div style="font-size:20px; font-weight:700; color:var(--amber);">3</div>
+            <div style="font-size:10px; color:var(--text-muted); font-family:'JetBrains Mono';">ACTIVE MEDS</div>
+          </div>
+        </div>
+
+        <div style="background:#000; border:1px solid var(--border); border-radius:16px; padding:14px; margin-top:14px; font-family:'JetBrains Mono', monospace; font-size:10.5px; line-height:1.6; color:#D1D5DB; max-height:220px; overflow-y:auto;" id="rawReportText">
+====================================================
+       SYNAPSE CLINICAL ADHERENCE REPORT            
+====================================================
+Generated: On-Device Storage Engine
+Compliance Window: 30-Day Moving Average
+
+PATIENT COMPLIANCE SCORE: 94.2%
+Longest Consecutive Streak: 12 Days
+
+• Metformin              : 500mg (2 pills) | withFood
+  Sector: MORNING (08:30)
+  Supply: 8 remaining (~4 days) | ⚠️ REFILL URGENT
+
+• Vitamin D3 & K2        : 1 capsule | withFood
+  Sector: MORNING (09:00) | Supply: 72 remaining (Optimal)
+
+• Magnesium Glycinate    : 400mg (2 capsules)
+  Sector: EVENING (21:30) | Supply: 40 remaining (Optimal)
+
+BIOMETRIC SYNERGIES:
+• Daily Hydration Average: 2,350 mL / 2,500 mL
+• Micro-Movement Breaks : 6 logged today
+====================================================
+        </div>
+
+        <button style="width:100%; margin-top:16px; background:var(--emerald); color:#000; border:none; padding:14px; border-radius:16px; font-weight:700; cursor:pointer;" onclick="copyReport()">Copy Clinical Report</button>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // State
+    let currentSector = 'morning';
+    let waterConsumed = 1750;
+    const waterTarget = 2500;
+    let stretches = 6;
+    let lockMedTaken = false;
+
+    const routines = [
+      { id: '1', title: 'Metformin', dosage: '500mg • 2 pills', sector: 'morning', time: '08:30', done: true, crit: true, supply: 8, daysLeft: 4, food: 'With Food' },
+      { id: '2', title: 'Vitamin D3 & K2', dosage: '1 capsule', sector: 'morning', time: '09:00', done: true, crit: false, supply: 72, daysLeft: 72, food: 'With Food' },
+      { id: '3', title: 'Omega 3', dosage: '1000mg • 1 softgel', sector: 'morning', time: '09:30', done: false, crit: false, supply: 30, daysLeft: 30, food: 'With Meal' },
+      { id: '4', title: 'Spinal Decompression Stretch', dosage: '3 mins mobility', sector: 'afternoon', time: '14:00', done: false, crit: false },
+      { id: '5', title: 'Magnesium Glycinate', dosage: '400mg • 2 capsules', sector: 'evening', time: '21:30', done: false, crit: false, supply: 40, daysLeft: 20, food: 'Night wind-down' }
+    ];
+
+    function setScreenMode(mode) {
+      document.getElementById('btnDashboard').classList.toggle('active', mode === 'dashboard');
+      document.getElementById('btnLock').classList.toggle('active', mode === 'lock');
+      document.getElementById('lockScreenLayer').classList.toggle('active', mode === 'lock');
+      document.getElementById('dashboardView').style.display = mode === 'dashboard' ? 'flex' : 'none';
+    }
+
+    function toggleLockMed() {
+      lockMedTaken = !lockMedTaken;
+      document.getElementById('lockCheckText').innerText = lockMedTaken ? 'Completed' : 'Mark Taken';
+      document.getElementById('lockCheckIcon').innerText = lockMedTaken ? '✅' : '✓';
+    }
+
+    function renderRoutines() {
+      const container = document.getElementById('pillsContainer');
+      container.innerHTML = '';
+      const filtered = routines.filter(r => r.sector === currentSector);
+
+      const doneCount = filtered.filter(r => r.done).length;
+      document.getElementById('sectorProgress').innerText = `${doneCount}/${filtered.length} DONE`;
+      document.getElementById('sectorHeaderTag').innerText = `${currentSector.toUpperCase()} REGIMEN`;
+
+      filtered.forEach(r => {
+        const item = document.createElement('div');
+        item.className = `pill-item ${r.done ? 'done' : ''}`;
+        item.onclick = () => togglePill(r.id);
+
+        item.innerHTML = `
+          <div class="pill-check ${r.done ? 'checked' : ''}">${r.done ? '✓' : ''}</div>
+          <div class="pill-details">
+            <div class="pill-name">
+              ${r.title}
+              ${r.crit ? '<span class="pill-tag-crit">CRITICAL</span>' : ''}
+            </div>
+            <div class="pill-meta">
+              <span>${r.dosage}</span>
+              ${r.food ? `<span>• ${r.food}</span>` : ''}
+              ${r.daysLeft && r.daysLeft <= 5 ? `<span class="refill-badge">⚠️ ${r.daysLeft}d supply</span>` : ''}
+            </div>
+          </div>
+          <div class="pill-time">${r.time}</div>
+        `;
+        container.appendChild(item);
+      });
+
+      updateScore();
+    }
+
+    function togglePill(id) {
+      const r = routines.find(item => item.id === id);
+      if (r) {
+        r.done = !r.done;
+        renderRoutines();
+      }
+    }
+
+    function switchSector(sector) {
+      currentSector = sector;
+      document.querySelectorAll('.sector-tab').forEach(t => {
+        t.classList.toggle('active', t.innerText.toLowerCase() === sector || (sector === 'afternoon' && t.innerText === 'MIDDAY'));
+      });
+      renderRoutines();
+    }
+
+    function updateScore() {
+      const total = routines.length;
+      const done = routines.filter(r => r.done).length;
+      const pct = Math.round((done / total) * 100);
+      document.getElementById('scoreDisplay').innerText = `${pct}%`;
+    }
+
+    function addWater(ml) {
+      waterConsumed = Math.min(3000, waterConsumed + ml);
+      document.getElementById('waterNum').innerText = waterConsumed.toLocaleString();
+      document.getElementById('lockWaterDisplay').innerText = `${waterConsumed.toLocaleString()} mL`;
+      const pct = Math.min(100, Math.round((waterConsumed / waterTarget) * 100));
+      document.getElementById('waterPct').innerText = `${pct}%`;
+      targetWaterY = 1.0 - (waterConsumed / waterTarget);
+    }
+
+    function logStretch() {
+      stretches++;
+      document.getElementById('stretchCount').innerText = stretches;
+    }
+
+    // Modal Handlers
+    function openJarvis() {
+      document.getElementById('jarvisModal').classList.add('open');
+      setTimeout(() => document.getElementById('jarvisInput').focus(), 150);
+    }
+
+    function openReport() {
+      document.getElementById('reportModal').classList.add('open');
+    }
+
+    function closeModal(e, id) {
+      if (e.target.id === id) {
+        document.getElementById(id).classList.remove('open');
+      }
+    }
+
+    function closeModalDirect(id) {
+      document.getElementById(id).classList.remove('open');
+    }
+
+    function quickFill(text) {
+      document.getElementById('jarvisInput').value = text;
+      executeJarvisCommand(text);
+    }
+
+    function handleJarvisKey(e) {
+      if (e.key === 'Enter') {
+        executeJarvisCommand(e.target.value.trim());
+      }
+    }
+
+    function executeJarvisCommand(text) {
+      const lower = text.toLowerCase();
+      const fb = document.getElementById('jarvisFeedback');
+      fb.style.display = 'block';
+
+      if (lower.includes('water')) {
+        addWater(500);
+        fb.innerHTML = '<strong>💧 Hydration Logged</strong><br>Added +500 mL to your daily wave. New total: ' + waterConsumed + ' mL.';
+      } else if (lower.includes('car') || lower.includes('park')) {
+        fb.innerHTML = '<strong>📍 Location Recalled (Lock Screen Audio)</strong><br>"Your car is parked at <strong>Level 2, Pillar B14</strong> next to the West Elevator."';
+      } else if (lower.includes('did i take')) {
+        fb.innerHTML = '<strong>✅ Adherence Confirmed (Spoken Aloud)</strong><br>"Yes, Metformin & Vitamin D3 were logged this morning at 08:30 AM."';
+      } else if (lower.includes('take') || lower.includes('pill')) {
+        routines.push({
+          id: String(Date.now()),
+          title: text.replace(/^take /i, ''),
+          dosage: '1 prescribed dose',
+          sector: currentSector,
+          time: '12:00',
+          done: false,
+          crit: false
+        });
+        renderRoutines();
+        fb.innerHTML = '<strong>💊 Protocol Scheduled</strong><br>Added new routine directly to your ' + currentSector + ' regimen.';
+      } else {
+        fb.innerHTML = '<strong>🧠 Stored in Vault</strong><br>Saved to your local encrypted memory capsule with zero cloud transmission.';
+      }
+
+      setTimeout(() => {
+        closeModalDirect('jarvisModal');
+        fb.style.display = 'none';
+        document.getElementById('jarvisInput').value = '';
+      }, 2400);
+    }
+
+    function copyReport() {
+      navigator.clipboard.writeText(document.getElementById('rawReportText').innerText);
+      alert('Clinical report copied to clipboard!');
+    }
+
+    // =========================================================================
+    // AMBIENT "HEY BUDDY" LOCK SCREEN WAKE & VOICE AUDIO SYNTHESIS
+    // =========================================================================
+    function dismissHud() {
+      document.getElementById('lockVoiceHud').classList.remove('active');
+    }
+
+    function speakAudio(text) {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 1.02;
+        utterance.pitch = 1.0;
+        const voices = window.speechSynthesis.getVoices();
+        const enVoice = voices.find(v => v.lang.startsWith('en') && (v.name.includes('Natural') || v.name.includes('Google') || v.name.includes('Samantha')));
+        if (enVoice) utterance.voice = enVoice;
+        window.speechSynthesis.speak(utterance);
+      }
+    }
+
+    function triggerHeyBuddyLockWake(query) {
+      setScreenMode('lock');
+
+      const hud = document.getElementById('lockVoiceHud');
+      const hudQ = document.getElementById('hudQuery');
+      const hudR = document.getElementById('hudResponse');
+
+      hud.classList.add('active');
+      hudQ.innerHTML = `🎙️ "Hey Buddy, ${query}"`;
+
+      const lower = query.toLowerCase();
+      let answer = "";
+
+      if (lower.includes('take') || lower.includes('pill') || lower.includes('med')) {
+        const doneList = routines.filter(r => r.done).map(r => r.title).join(' & ');
+        if (doneList) {
+          answer = `Yes, Buddy. You have taken ${doneList} today. All morning protocols are complete.`;
+        } else {
+          answer = `No, Buddy. Your morning medications are still pending for today.`;
+        }
+      } else if (lower.includes('water') || lower.includes('drank')) {
+        addWater(250);
+        answer = `Logged 250 milliliters of water. Your daily total is now ${waterConsumed} milliliters.`;
+      } else if (lower.includes('car') || lower.includes('park')) {
+        answer = `Your car is parked at Basement Level 2, Pillar B14 next to the West Elevator.`;
+      } else {
+        answer = `I am listening, Buddy. You can ask if you took your medications, check hydration, or ask where you parked.`;
+      }
+
+      hudR.innerHTML = `🗣️ <strong>Synapse Ambient:</strong> "${answer}"`;
+      speakAudio(answer);
+    }
+
+    // Physical Microphone Speech Recognition Test
+    let recognition = null;
+    function triggerMicListening() {
+      const chip = document.getElementById('realMicChip');
+      const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+      if (!SpeechRec) {
+        alert("Web Speech API not supported in this browser. Running voice simulation instead.");
+        triggerHeyBuddyLockWake('Did I take my morning pills today?');
+        return;
+      }
+
+      if (recognition) {
+        recognition.stop();
+        recognition = null;
+        chip.innerText = "🎤 Test Mic Input";
+        return;
+      }
+
+      recognition = new SpeechRec();
+      recognition.continuous = false;
+      recognition.interimResults = false;
+      recognition.lang = 'en-US';
+
+      chip.innerText = "🔴 Listening... Speak now";
+      chip.style.borderColor = "var(--coral)";
+
+      recognition.onresult = function(event) {
+        const transcript = event.results[0][0].transcript;
+        chip.innerText = "🎤 Test Mic Input";
+        chip.style.borderColor = "rgba(255,255,255,0.12)";
+        triggerHeyBuddyLockWake(transcript);
+        recognition = null;
+      };
+
+      recognition.onerror = function() {
+        chip.innerText = "🎤 Test Mic Input";
+        chip.style.borderColor = "rgba(255,255,255,0.12)";
+        recognition = null;
+      };
+
+      recognition.start();
+    }
+
+    // Canvas Realistic Fluid Wave Animation
+    const canvas = document.getElementById('waterCanvas');
+    const ctx = canvas.getContext('2d');
+    let step = 0;
+    let targetWaterY = 0.30;
+    let currentWaterY = 0.30;
+
+    function resizeCanvas() {
+      canvas.width = canvas.parentElement.clientWidth;
+      canvas.height = canvas.parentElement.clientHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    function drawWave() {
+      step += 0.04;
+      currentWaterY += (targetWaterY - currentWaterY) * 0.08;
+
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      const w = canvas.width;
+      const h = canvas.height;
+      const baseHeight = h * currentWaterY;
+
+      ctx.beginPath();
+      ctx.moveTo(0, h);
+      ctx.lineTo(0, baseHeight);
+
+      for (let x = 0; x <= w; x += 10) {
+        const y = baseHeight + Math.sin(x * 0.03 + step) * 4 + Math.cos(x * 0.02 + step * 0.8) * 3;
+        ctx.lineTo(x, y);
+      }
+
+      ctx.lineTo(w, h);
+      ctx.closePath();
+
+      const grad = ctx.createLinearGradient(0, baseHeight, 0, h);
+      grad.addColorStop(0, 'rgba(6, 182, 212, 0.7)');
+      grad.addColorStop(1, 'rgba(56, 189, 248, 0.2)');
+      ctx.fillStyle = grad;
+      ctx.fill();
+
+      requestAnimationFrame(drawWave);
+    }
+    drawWave();
+
+    renderRoutines();
+  </script>
+</body>
+</html>
