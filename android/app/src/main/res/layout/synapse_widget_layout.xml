@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="horizontal"
+    android:background="#121218"
+    android:padding="16dp">
+
+    <LinearLayout
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_weight="1"
+        android:orientation="vertical">
+
+        <TextView
+            android:id="@+id/widget_med_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="08:30"
+            android:textColor="#10B981"
+            android:textSize="10sp"
+            android:fontFamily="monospace"
+            android:textStyle="bold" />
+
+        <TextView
+            android:id="@+id/widget_med_title"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Metformin"
+            android:textColor="#FFFFFF"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:layout_marginTop="2dp" />
+
+        <TextView
+            android:id="@+id/widget_med_dosage"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="500mg • 2 pills"
+            android:textColor="#8E8E9A"
+            android:textSize="11sp" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:gravity="end">
+
+        <TextView
+            android:id="@+id/widget_water_stat"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="1,750 mL"
+            android:textColor="#06B6D4"
+            android:textSize="14sp"
+            android:fontFamily="monospace"
+            android:textStyle="bold" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="HYDRATION"
+            android:textColor="#8E8E9A"
+            android:textSize="9sp"
+            android:fontFamily="monospace" />
+    </LinearLayout>
+</LinearLayout>
