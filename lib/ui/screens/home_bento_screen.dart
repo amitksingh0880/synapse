@@ -126,7 +126,7 @@ class _HomeBentoScreenState extends ConsumerState<HomeBentoScreen> {
   }
 
   void _openLockScreenSimulator() {
-    HapticsUtil.mediumImpact();
+    HapticsUtil.mediumConfirm();
     Navigator.of(context).push(
       PageRouteBuilder(
         opaque: false,
@@ -199,7 +199,7 @@ class _HomeBentoScreenState extends ConsumerState<HomeBentoScreen> {
                                   style: TextStyle(
                                     color: _isAmbientListening
                                         ? AppColors.emeraldMeds
-                                        : AppColors.amberAdherence,
+                                        : AppColors.amberReminders,
                                     fontSize: 8,
                                   ),
                                 ),

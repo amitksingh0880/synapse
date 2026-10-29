@@ -21,6 +21,11 @@ class SynapseVoiceTaskHandler extends TaskHandler {
   }
 
   @override
+  void onReceiveData(Object data) {
+    // Receive data from UI isolate
+  }
+
+  @override
   Future<void> onDestroy(DateTime timestamp) async {
     // Service stopped
   }
@@ -56,14 +61,6 @@ class AndroidForegroundVoiceService {
             'Maintains zero-latency "Hey Buddy" wake-word detection while locked.',
         channelImportance: NotificationChannelImportance.LOW,
         priority: NotificationPriority.LOW,
-        iconData: const NotificationIconData(
-          resType: ResourceType.mipmap,
-          resPrefix: ResourcePrefix.ic,
-          name: 'launcher',
-        ),
-        buttons: [
-          const NotificationButton(id: 'ask_synapse', text: '🎙️ Speak to Synapse'),
-        ],
       ),
       iosNotificationOptions: const IOSNotificationOptions(
         showNotification: false,
@@ -84,16 +81,21 @@ class AndroidForegroundVoiceService {
       return true;
     }
 
-    return await FlutterForegroundTask.startService(
+    final result = await FlutterForegroundTask.startService(
       serviceId: 256,
       notificationTitle: 'Synapse Ambient Voice',
       notificationText: 'Listening for "Hey Buddy"...',
+      notificationButtons: [
+        const NotificationButton(id: 'ask_synapse', text: '🎙️ Speak to Synapse'),
+      ],
       callback: startCallback,
     );
+    return result is ServiceRequestSuccess;
   }
 
   static Future<bool> stopService() async {
-    return await FlutterForegroundTask.stopService();
+    final result = await FlutterForegroundTask.stopService();
+    return result is ServiceRequestSuccess;
   }
 
   static Future<bool> isRunning() async {

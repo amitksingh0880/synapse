@@ -24,6 +24,9 @@ class HydrationState {
     return ratio > 1.0 ? 1.0 : ratio;
   }
 
+  /// Alias for compliance / progress percentage
+  double get compliancePercentage => progressPercentage;
+
   /// Whether user hit their daily water target
   bool get isGoalReached => consumedMl >= targetMl;
 
