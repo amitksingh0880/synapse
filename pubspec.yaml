@@ -1,0 +1,31 @@
+name: synapse
+description: "An ambient, widget-first routine, health, and memory companion built with Flutter."
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.5.0
+  flutter: ">=3.24.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_riverpod: ^2.6.1
+  shared_preferences: ^2.3.5
+  intl: ^0.20.2
+  uuid: ^4.5.1
+  flutter_tts: ^4.2.2
+  speech_to_text: ^7.0.0
+  flutter_local_notifications: ^18.0.1
+  home_widget: ^0.7.0
+  google_fonts: ^6.2.1
+  flutter_foreground_task: ^8.1.0
+  porcupine_flutter: ^3.0.4
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^5.0.0
+
+flutter:
+  uses-material-design: true
