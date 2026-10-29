@@ -140,13 +140,27 @@ class NLPParserService {
     int minute = 0;
     DaySector sector = DaySector.morning;
 
-    final timeMatch = RegExp(r'(\d{1,2})(?::(\d{2}))?\s*(am|pm)?').firstMatch(lower);
+    // Matches explicit time representations (e.g. "at 8:30 am", "8:30am", "8:30", "at 8 am", "at 8", "8am", "8 pm")
+    // Avoids falsely matching unadorned quantity counts like "take 2 pills"
+    final timeMatch = RegExp(r'(?:at\s+)?(\d{1,2}):(\d{2})\s*(am|pm)?|(?:at\s+)(\d{1,2})\s*(am|pm)?|(\d{1,2})\s*(am|pm)').firstMatch(lower);
     if (timeMatch != null) {
-      hour = int.tryParse(timeMatch.group(1)!) ?? 8;
-      minute = int.tryParse(timeMatch.group(2) ?? '0') ?? 0;
-      final meridian = timeMatch.group(3);
-      if (meridian == 'pm' && hour < 12) hour += 12;
-      if (meridian == 'am' && hour == 12) hour = 0;
+      if (timeMatch.group(1) != null) {
+        hour = int.tryParse(timeMatch.group(1)!) ?? 8;
+        minute = int.tryParse(timeMatch.group(2) ?? '0') ?? 0;
+        final meridian = timeMatch.group(3);
+        if (meridian == 'pm' && hour < 12) hour += 12;
+        if (meridian == 'am' && hour == 12) hour = 0;
+      } else if (timeMatch.group(4) != null) {
+        hour = int.tryParse(timeMatch.group(4)!) ?? 8;
+        final meridian = timeMatch.group(5);
+        if (meridian == 'pm' && hour < 12) hour += 12;
+        if (meridian == 'am' && hour == 12) hour = 0;
+      } else if (timeMatch.group(6) != null) {
+        hour = int.tryParse(timeMatch.group(6)!) ?? 8;
+        final meridian = timeMatch.group(7);
+        if (meridian == 'pm' && hour < 12) hour += 12;
+        if (meridian == 'am' && hour == 12) hour = 0;
+      }
     }
 
     if (lower.contains('night') || lower.contains('evening') || hour >= 18) {
@@ -171,11 +185,13 @@ class NLPParserService {
 
     // Title Heuristic: Extract word after "take"
     String title = 'Prescription Dose';
-    final takeMatch = RegExp(r'take\s+(?:(\d+)\s+)?([a-zA-Z0-9\s]+?)(?:\s+pills?|\s+at|\s+every|\s+with|$)')
+    final takeMatch = RegExp(r'take\s+(?:(\d+)\s+)?([a-zA-Z0-9\s]+?)(?:\s+pills?|\s+tablets?|\s+capsules?|\s+at|\s+every|\s+with|$)')
         .firstMatch(lower);
     if (takeMatch != null && takeMatch.group(2) != null) {
       title = takeMatch.group(2)!.trim();
-      title = title[0].toUpperCase() + title.substring(1);
+      if (title.isNotEmpty) {
+        title = title[0].toUpperCase() + title.substring(1);
+      }
     }
 
     final item = RoutineItem(

@@ -19,6 +19,22 @@ class MemoryItem {
     List<String>? tags,
   }) : tags = tags ?? [];
 
+  /// Common stop words to avoid false-positive semantic matches
+  static const Set<String> _stopWords = {
+    'what', 'where', 'when', 'which', 'who', 'whom', 'how', 'why',
+    'the', 'is', 'are', 'was', 'were', 'be', 'been', 'being',
+    'have', 'has', 'had', 'do', 'does', 'did',
+    'a', 'an', 'and', 'but', 'if', 'or', 'because', 'as', 'until', 'while',
+    'of', 'at', 'by', 'for', 'with', 'about', 'against', 'between', 'into',
+    'through', 'during', 'before', 'after', 'above', 'below', 'to', 'from',
+    'up', 'down', 'in', 'out', 'on', 'off', 'over', 'under', 'again',
+    'further', 'then', 'once', 'here', 'there', 'all', 'any', 'both',
+    'each', 'few', 'more', 'most', 'other', 'some', 'such', 'no', 'nor',
+    'not', 'only', 'own', 'same', 'so', 'than', 'too', 'very',
+    'can', 'will', 'just', 'should', 'now', 'my', 'your', 'his', 'her',
+    'its', 'our', 'their', 'this', 'that', 'these', 'those'
+  };
+
   /// Fuzzy semantic query matching for instant retrieval
   bool matchesQuery(String query) {
     final cleanQuery = query.toLowerCase().trim();
@@ -31,18 +47,33 @@ class MemoryItem {
     }
 
     // Check tags
-    if (tags.any((tag) => cleanQuery.contains(tag.toLowerCase()))) {
+    if (tags.any((tag) {
+      final t = tag.toLowerCase().trim();
+      return t.isNotEmpty && cleanQuery.contains(t);
+    })) {
       return true;
     }
 
-    // Keyword overlap
+    // Keyword overlap (ignoring punctuation and stop words)
     final queryTokens = cleanQuery
+        .replaceAll(RegExp(r'[^\w\s]'), ' ')
         .split(RegExp(r'\s+'))
-        .where((t) => t.length > 2)
+        .where((t) => t.length > 2 && !_stopWords.contains(t))
         .toList();
 
+    if (queryTokens.isEmpty) return false;
+
+    final keyTokens = cleanKey
+        .replaceAll(RegExp(r'[^\w\s]'), ' ')
+        .split(RegExp(r'\s+'))
+        .toSet();
+    final contentTokens = cleanContent
+        .replaceAll(RegExp(r'[^\w\s]'), ' ')
+        .split(RegExp(r'\s+'))
+        .toSet();
+
     for (final token in queryTokens) {
-      if (cleanKey.contains(token) || cleanContent.contains(token)) {
+      if (keyTokens.contains(token) || contentTokens.contains(token)) {
         return true;
       }
     }
