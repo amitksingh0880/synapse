@@ -24,16 +24,19 @@ if (flutterVersionName == null) {
 
 android {
     namespace "com.synapse.ambient"
-    compileSdk 34
-    ndkVersion flutter.ndkVersion
+    compileSdk 35
+
+    // Hardcoded NDK version — avoids early evaluation of flutter.ndkVersion
+    // before the Flutter Gradle plugin is fully applied.
+    ndkVersion "27.0.12077973"
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = '17'
     }
 
     sourceSets {
@@ -42,8 +45,8 @@ android {
 
     defaultConfig {
         applicationId "com.synapse.ambient"
-        minSdkVersion 24
-        targetSdkVersion 34
+        minSdk 24
+        targetSdk 35
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
     }
@@ -62,5 +65,5 @@ flutter {
 }
 
 dependencies {
-    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.9.22"
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:1.9.24"
 }
